@@ -37,7 +37,7 @@ class Zone(BaseModel):
             ) -> None:
 
         self.name = name
-        self.x_axis: int = Field(gt=0) = x_axis
+        self.x_axis: int = x_axis
         self.y_axis = y_axis
         self.color = Color.BLUE
         self.priority = priority
