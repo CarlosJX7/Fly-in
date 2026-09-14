@@ -15,6 +15,10 @@ connection: waypoint2-goal
 
 #from src.models import MapGraph
 
+#from .models import MapGraph
+from collections import defaultdict
+
+
 def _get_drones(drone_dict: dict[str, list[str]]) -> int | None:
     number = drone_dict.get("nb_drones")
     if number:
@@ -23,8 +27,23 @@ def _get_drones(drone_dict: dict[str, list[str]]) -> int | None:
         return None
 
 
+def get_hubs(input: dict[str, list[int]]):
+    hubs = input.get("hub")
+    hubs_list = []
+    if hubs:
+        for hub in hubs:
+            new_hub = {}
+            new_hub["name"] = hub[0]
+            new_hub["x"] = hub[1]
+            new_hub["y"] = hub[2]
+            new_hub["color"] = hub[3].replace("color=", "")
+            hubs_list.append(new_hub)
+    return hubs_list
+
+
 def list_to_dict(lista: list[list[str]]) -> dict[str, list[str]]:
-    dictionary: dict[str, list[str]] = {}
+    #dictionary: dict[str, list[str]] = {}
+    dictionary = defaultdict(list)
 
     for l in lista:
         key = l[0]
@@ -32,7 +51,7 @@ def list_to_dict(lista: list[list[str]]) -> dict[str, list[str]]:
         for el in l:
             if el != l[0]:
                 value.append(el)
-        dictionary[key] = value
+        dictionary[key].append(value)
 
     return dictionary
 
@@ -64,3 +83,4 @@ if __name__ == "__main__":
     print(elementos)
     print(elementos["nb_drones"])
     print(elementos.get("start_hub"))
+    print(f"--{get_hubs(elementos)}")
