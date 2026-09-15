@@ -15,7 +15,6 @@ class ZoneType(Enum):
 
 
 class Color(Enum):
-    # May create a Color class for color(red, light) or color(red, dark) or color(red) 
     BLUE = "BLUE"
     RED = "RED"
     YELLOW = "YELLOW"
@@ -41,7 +40,7 @@ class Zone(BaseModel):
         self.y_axis = y_axis
         self.color = Color.BLUE
         self.priority = priority
-        self.connection: list[Connection] | None = None 
+        self.connection: list[Connection] | None = None
         self.max_drones = max_drones
         self.max_link = max_link
         self.type = ZoneType.NORMAL
@@ -59,10 +58,10 @@ class MapGraph:
         self.zones: dict[str, Zone] = {}
         self.start_hub: Zone | None = None
         self.end_hub: Zone | None = None
-        
+
 
 class Drone:
     def __init__(self, drone_id: str, start_zone: str) -> None:
         self.id = drone_id
         self.start_zone = start_zone
-        self.state = State.WAITING 
+        self.state = State.WAITING

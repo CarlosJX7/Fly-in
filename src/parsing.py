@@ -27,15 +27,15 @@ def _get_drones(drone_dict: dict[str, list[str]]) -> int | None:
         return None
 
 
-def get_hubs(input: dict[str, list[int]]):
+def get_hubs(input: dict[str, list[str]]):
     hubs = input.get("hub")
     hubs_list = []
     if hubs:
         for hub in hubs:
             new_hub = {}
             new_hub["name"] = hub[0]
-            new_hub["x"] = hub[1]
-            new_hub["y"] = hub[2]
+            new_hub["x_axis"] = int(hub[1])
+            new_hub["y_axis"] = int(hub[2])
             new_hub["color"] = hub[3].replace("color=", "")
             hubs_list.append(new_hub)
     return hubs_list
@@ -55,6 +55,7 @@ def list_to_dict(lista: list[list[str]]) -> dict[str, list[str]]:
 
     return dictionary
 
+
 class MapParser():
     @staticmethod
     def map_parser() -> list[list[str]]:
@@ -73,14 +74,22 @@ class MapParser():
                 if line_list:
                     l_final.append(line_list)
             return l_final
- 
+
 
 if __name__ == "__main__":
     lista = MapParser.map_parser()
     print(len(lista))
     #print(lista)
     elementos = list_to_dict(lista)
+    print("print elementos")
     print(elementos)
+    print()
+    print("elementos[nb_drones]")
     print(elementos["nb_drones"])
+    print()
+    print("elementos.get(start_hub)")
     print(elementos.get("start_hub"))
-    print(f"--{get_hubs(elementos)}")
+    print()
+    hubs = get_hubs(elementos)
+    for hub in hubs:
+        print(hub)
