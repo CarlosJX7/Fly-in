@@ -7,7 +7,7 @@ class State(Enum):
     IN_TRANSIT = "IN_TRANSIT"
     FINISHED = "FINISHED"
 
-class ZoneType(Enum):
+class HubType(Enum):
     NORMAL = "NORMAL"
     RESTRICTED = "RESTRICTED"
     PRIORITY = "PRIORITY"
@@ -21,47 +21,28 @@ class Color(Enum):
     GREEN = "GREEN"
 
 
-class Zone(BaseModel):
-    def __init__(
-            self,
-            name: str,
-            x_axis: int,
-            y_axis: int,
-            color: Color,
-            priority: str,
-            connection: list,
-            max_drones: int,
-            max_link: int,
-            type: str
-            ) -> None:
-
-        self.name = name
-        self.x_axis: int = x_axis
-        self.y_axis = y_axis
-        self.color = Color.BLUE
-        self.priority = priority
-        self.connection: list[Connection] | None = None
-        self.max_drones = max_drones
-        self.max_link = max_link
-        self.type = ZoneType.NORMAL
+class Hub(BaseModel):
+    name: str = Field(...)
+    x_axis: int = Field(ge=0)
+    y_axis: int = Field(ge=0)
+    color: str = Field(...)
 
 
-class Connection:
-    def __init__(self) -> None:
-        start_zone: Zone | None = None
-        end_zone: Zone | None = None
-        max_capacity: int | None = None
+class Connection(BaseModel):
+    origin_hub: Hub | None = Field(...)
+    destiny_hub: Hub | None = Field(...)
 
 
-class MapGraph:
-    def __init__(self) -> None:
-        self.zones: dict[str, Zone] = {}
-        self.start_hub: Zone | None = None
-        self.end_hub: Zone | None = None
+class MapGraph(BaseModel):
+    nb_drones: int = Field(..., gt=0)
+    starting_hub: Hub = Field(...)
+    hubs: dict[str, Hub] = Field(...)
+    goal_hub: Hub = Field(...)
+    connection: list[Connection] = Field(...)
 
 
 class Drone:
-    def __init__(self, drone_id: str, start_zone: str) -> None:
+    def __init__(self, drone_id: str, start_hub: str) -> None:
         self.id = drone_id
-        self.start_zone = start_zone
+        self.start_hub = start_hub
         self.state = State.WAITING
