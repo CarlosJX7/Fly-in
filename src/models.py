@@ -23,8 +23,8 @@ class Color(Enum):
 
 class Hub(BaseModel):
     name: str = Field(...)
-    x_axis: int = Field(ge=0)
-    y_axis: int = Field(ge=0)
+    x_axis: int = Field(...)
+    y_axis: int = Field(...)
     color: str = Field(...)
 
 
