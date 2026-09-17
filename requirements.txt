@@ -1,0 +1,37 @@
+# =============================================================
+# Fly-in — dependencias del proyecto
+# =============================================================
+# -------------------------------------------------------------
+# 1) Activar el entorno virtual
+# -------------------------------------------------------------
+#   python3 -m venv .venv
+#   source .venv/bin/activate
+#
+#   Sabrás que está activo porque el prompt mostrará (.venv) al
+#   principio de la línea, ej:
+#   (.venv) usuario@maquina:~/Fly-in$
+#
+# -------------------------------------------------------------
+# 2) Instalar las dependencias de este fichero
+# -------------------------------------------------------------
+#   pip install -r requirements.txt
+#
+# -------------------------------------------------------------
+# 3) Desactivar el entorno virtual (cuando termines)
+# -------------------------------------------------------------
+#   deactivate
+#
+# -------------------------------------------------------------
+# 4) Añadir .venv/ al .gitignore (para no subir el entorno al repo)
+# -------------------------------------------------------------
+#   echo ".venv/" >> .gitignore
+#
+#   Si el .gitignore no existe todavía, ese mismo comando lo crea.
+#   Comprueba que quedó bien con:
+#   cat .gitignore
+#
+# =============================================================
+# Dependencias
+# =============================================================
+
+pydantic>=2,<3
