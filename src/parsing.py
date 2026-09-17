@@ -1,5 +1,5 @@
 from enum import Enum
-from pydantic import ValidationError
+from pydantic import ValidationError, BaseModel
 from typing import Any
 """
 # Easy Level 1: Simple linear path
@@ -47,12 +47,12 @@ class MapParser():
             return l_final
 
     @staticmethod
-    def _get_drones(drone_dict: dict[str, list[str]]) -> int | None:
+    def get_drones(drone_dict: dict[str, list[list[str]]]) -> int | None:
         number = drone_dict.get("nb_drones")
         if number:
             return int(number[0][0])
         else:
-            return None
+            raise ValueError
 
     @staticmethod
     def list_to_dict(raw_data: list[list[str]]) -> dict[str, list[list[str]]]:
@@ -60,7 +60,6 @@ class MapParser():
         #Probar a hacer dos diccionarios
     #dictionary: dict[str, list[str]] = {}
         dictionary: dict[str, list[list[str]]] = {}
-        print(f"lista {raw_data}")
         for data_list in raw_data:
             key = data_list[0]
             values = []
@@ -71,7 +70,6 @@ class MapParser():
                 dictionary[key] = [values] #porque mypy ncesita una lista
             else:
                 dictionary[key].append(values)
-        print(f"resultado {dictionary}")
         return dictionary
 
     @staticmethod
@@ -79,33 +77,73 @@ class MapParser():
         return Hub.model_validate(input)
 
     @staticmethod
-    def get_hubs_list(input: dict[str, list[str] | str]):
+    def get_hub(hub_input: list[str]) -> dict[str, str | int]:
+        new_hub = {}
+        new_hub["name"] = hub_input[0]
+        new_hub["x_axis"] = int(hub_input[1])
+        new_hub["y_axis"] = int(hub_input[2])
+        new_hub["color"] = hub_input[3].replace("color=", "")
+        return new_hub
+
+    @staticmethod
+    def get_hubs_list(input: dict[str, list[list[str]]]):
         """ Busca la clave 'hub' y devuelve una lista con todos esos elementos
             -Todavia no son de tipo hub
         """
-        print(f"input = {input}")
-        def get_hub(hub_input: list[str]) -> dict[str, str | int]:
-            new_hub = {}
-            new_hub["name"] = hub_input[0]
-            new_hub["x_axis"] = int(hub_input[1])
-            new_hub["y_axis"] = int(hub_input[2])
-            new_hub["color"] = hub_input[3].replace("color=", "")
-            return new_hub
 
-        hubs = input.get("hub")
-        print(hubs)
         hubs_dict = {}
+        hubs = input.get("hub")
+        start = input.get("start_hub")
+        if not start:
+            raise ValueError
+        start_hub = start[0]
+        start_hub = MapParser.get_hub(start_hub)
+        hubs_dict["start"] = start_hub
+
+        start = input.get("end_hub")
+        if not start:
+            raise ValueError
+        end_hub = start[0]
+        end_hub = MapParser.get_hub(end_hub)
+        hubs_dict["goal"] = end_hub
         if hubs:
             for hub in hubs:
-                print(f"hub : {hub}")
-                print(get_hub(hub))
-                #hubs_dict[new_hub.get("name")] = new_hub
+                new_hub = MapParser.get_hub(hub)
+                hubs_dict[new_hub.get("name")] = new_hub
         return hubs_dict
 
     @staticmethod
-    def get_connections(input: dict[str, list[str]]):
-        conns = input["connection"]
+    def get_hubs_list_v2(input: dict[str, list[list[str]]]) -> dict[str, Hub]:
+        """ Busca la clave 'hub' y devuelve una lista con todos esos elementos
+            -Todavia no son de tipo hub
+        """
+
+        hubs_dict = {}
+        hubs = input.get("hub")
+        start = input.get("start_hub")
+        if not start:
+            raise ValueError
+        start_hub = start[0]
+        start_hub = MapParser.get_hub(start_hub)
+        hubs_dict["start"] = Hub.model_validate(start_hub)
+
+        start = input.get("end_hub")
+        if not start:
+            raise ValueError
+        end_hub = start[0]
+        end_hub = MapParser.get_hub(end_hub)
+        hubs_dict["goal"] = Hub.model_validate(end_hub)
+        if hubs:
+            for hub in hubs:
+                new_hub = MapParser.get_hub(hub)
+                the_hub = Hub.model_validate(new_hub)
+                hubs_dict[new_hub.get("name")] = the_hub
+        return hubs_dict
+
+    @staticmethod
+    def get_connections(input: dict[str, list[list[str]]]) -> list[dict[str, str]]:
         conn_list = []
+        conns = input["connection"]
         if conns:
             for con in conns:
                 conn_dict = {}
@@ -114,54 +152,39 @@ class MapParser():
                 conn_dict["destiny_hub"] = elements[1]
                 conn_list.append(conn_dict)
         return conn_list
-    @staticmethod
-    def create_connection(input: dict[str, str]) -> Connection:
-        return Connection.model_validate(input)
 
-    def get_graph(self, path: str):
+    @staticmethod
+    def create_connection(connection: dict[str, str], hubs: dict[str, Hub]) -> Connection:
+        origin_name = connection.get("origin_hub")
+        destiny_name = connection.get("destiny_hub")
+        if not origin_name or not destiny_name:
+            raise ValueError
+        origin_hub = hubs[origin_name]
+        destiny_hub = hubs[destiny_name]
+
+        return Connection.model_validate({"origin_hub": origin_hub, "destiny_hub": destiny_hub})
+    @staticmethod
+    def connection_dict(connections: list[dict[str, str]], hubs: dict[str, Hub]) -> list[Connection]:
+        data = []
+        for conn in connections:
+            data.append(MapParser.create_connection(conn, hubs))
+        return data
+
+    def get_graph(self, path: str) -> MapGraph:
         raw_input = self.input_parser(path)
         raw_input = self.list_to_dict(raw_input)
-        nb_drones = self._get_drones
+        nb_drones = self.get_drones(raw_input)
         start = raw_input.get("start_hub")
         if not start: # hacer que el start sea un dict tambien
             raise ValueError("error")
-        name = start[0][0] #sacar esto a una funcion, programable solo para start y end
-        x_axis = start[0][1]
-        y_axis = start[0][2]
-        color = start[0][3]
-        hubs = []
-        list_hubs = self.get_hubs_list(raw_input)
-        for h in list_hubs:
-            hubs.append(h)
-        graph = MapGraph.model_validate(nb_drones, None, hubs, None, )
-        print(hubs)
-        #self.create_hub(raw_input)
-
-
-if __name__ == "__main__":
-    path = "maps/easy/01_linear_path.txt"
-    parser = MapParser()
-    lista = parser.input_parser(path)
-    print(len(lista))
-    #print(lista)
-    elementos = MapParser.list_to_dict(lista)
-    print("print elementos")
-    print(elementos)
-    print()
-    print("elementos[nb_drones]")
-    print(parser._get_drones(elementos))
-    print()
-    print("elementos.get(start_hub)")
-    print(elementos.get("start_hub"))
-    print()
-    hubs = MapParser.get_hubs_list(elementos)
-    for hub in hubs:
-        print(hub)
-
-    print()
-    print("Conns")
-    print(MapParser.get_connections(elementos))
-    print()
-    print()
-    print("clase")
-    print(parser.get_graph(path))
+        list_hubs = self.get_hubs_list_v2(raw_input)
+        data_connection = MapParser.get_connections(raw_input)
+        connections = MapParser.connection_dict(data_connection, list_hubs)
+        graph = MapGraph.model_validate({
+                "nb_drones": nb_drones,
+                "starting_hub": list_hubs["start"],
+                "hubs": list_hubs,
+                "goal_hub": list_hubs["goal"],
+                "connection": connections
+            })
+        return graph
