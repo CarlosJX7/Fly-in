@@ -1,6 +1,5 @@
 from enum import Enum
 from pydantic import ValidationError, BaseModel
-from typing import Any
 """
 # Easy Level 1: Simple linear path
 nb_drones: 2
@@ -78,7 +77,7 @@ class MapParser():
 
     @staticmethod
     def get_hub(hub_input: list[str]) -> dict[str, str | int]:
-        new_hub = {}
+        new_hub: dict[str, str | int] = {}
         new_hub["name"] = hub_input[0]
         new_hub["x_axis"] = int(hub_input[1])
         new_hub["y_axis"] = int(hub_input[2])
@@ -86,58 +85,35 @@ class MapParser():
         return new_hub
 
     @staticmethod
-    def get_hubs_list(input: dict[str, list[list[str]]]):
-        """ Busca la clave 'hub' y devuelve una lista con todos esos elementos
-            -Todavia no son de tipo hub
-        """
-
-        hubs_dict = {}
-        hubs = input.get("hub")
-        start = input.get("start_hub")
-        if not start:
-            raise ValueError
-        start_hub = start[0]
-        start_hub = MapParser.get_hub(start_hub)
-        hubs_dict["start"] = start_hub
-
-        start = input.get("end_hub")
-        if not start:
-            raise ValueError
-        end_hub = start[0]
-        end_hub = MapParser.get_hub(end_hub)
-        hubs_dict["goal"] = end_hub
-        if hubs:
-            for hub in hubs:
-                new_hub = MapParser.get_hub(hub)
-                hubs_dict[new_hub.get("name")] = new_hub
-        return hubs_dict
-
-    @staticmethod
     def get_hubs_list_v2(input: dict[str, list[list[str]]]) -> dict[str, Hub]:
         """ Busca la clave 'hub' y devuelve una lista con todos esos elementos
             -Todavia no son de tipo hub
         """
 
-        hubs_dict = {}
+        hubs_dict: dict[str, Hub] = {}
         hubs = input.get("hub")
         start = input.get("start_hub")
         if not start:
             raise ValueError
         start_hub = start[0]
-        start_hub = MapParser.get_hub(start_hub)
-        hubs_dict["start"] = Hub.model_validate(start_hub)
+        hub_start = MapParser.get_hub(start_hub)
+        hubs_dict["start"] = Hub.model_validate(hub_start)
 
         start = input.get("end_hub")
         if not start:
             raise ValueError
         end_hub = start[0]
-        end_hub = MapParser.get_hub(end_hub)
-        hubs_dict["goal"] = Hub.model_validate(end_hub)
+        hub_end = MapParser.get_hub(end_hub)
+        hubs_dict["goal"] = Hub.model_validate(hub_end)
         if hubs:
             for hub in hubs:
-                new_hub = MapParser.get_hub(hub)
+                new_hub: dict[str, str |int] = MapParser.get_hub(hub)
                 the_hub = Hub.model_validate(new_hub)
-                hubs_dict[new_hub.get("name")] = the_hub
+                name = new_hub.get("name")
+                if isinstance(name, str):
+                    hubs_dict[name] = the_hub
+                else:
+                    raise ValueError
         return hubs_dict
 
     @staticmethod
@@ -172,13 +148,13 @@ class MapParser():
 
     def get_graph(self, path: str) -> MapGraph:
         raw_input = self.input_parser(path)
-        raw_input = self.list_to_dict(raw_input)
-        nb_drones = self.get_drones(raw_input)
-        start = raw_input.get("start_hub")
+        parsed_input = self.list_to_dict(raw_input)
+        nb_drones = self.get_drones(parsed_input)
+        start = parsed_input.get("start_hub")
         if not start: # hacer que el start sea un dict tambien
             raise ValueError("error")
-        list_hubs = self.get_hubs_list_v2(raw_input)
-        data_connection = MapParser.get_connections(raw_input)
+        list_hubs = self.get_hubs_list_v2(parsed_input)
+        data_connection = MapParser.get_connections(parsed_input)
         connections = MapParser.connection_dict(data_connection, list_hubs)
         graph = MapGraph.model_validate({
                 "nb_drones": nb_drones,
