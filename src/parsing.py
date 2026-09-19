@@ -28,8 +28,21 @@ from collections import defaultdict
 
 class MapParser():
     @staticmethod
-    def input_parser(path: str) -> list[list[str]]:
+    def input_parser(path: str):# -> list[list[str]]:
         with open(path, "r", encoding="utf-8") as f:
+            params: list[dict[str, str]] = []
+            for line in f:
+                line = line.strip()
+                param = {}
+                if line.startswith("#") or not line:
+                    continue
+                key, sep, value = line.partition(":")
+                key = key.strip()
+                value = value.strip()
+                param[key] = value
+                params.append(param)
+            print(params)
+            exit(1)
             l_final = []
             for line in f:
                 line_list = []
