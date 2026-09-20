@@ -28,7 +28,7 @@ from collections import defaultdict
 
 class MapParser():
     @staticmethod
-    def get_param(name: str, params: list[dict[str, str]]) -> list[str]:
+    def get_param(name: str, params: list[dict[str, str]]) -> list[dict[str, str]]:
         elements = []
         for param in params:
             if param.get(name):
@@ -36,23 +36,34 @@ class MapParser():
         return elements
 
     @staticmethod
+    def get_optionals(items: str) -> dict[str, str]:
+        # Una posibilidad es usar regex para los opcionales
+        print(f"input: >>>{items}<<<")
+
+    @staticmethod
     def create_hub_(hub: dict[str, str]) -> Hub:
-        print(f"input: {hub}")
         items = hub["hub"]
-        print(f"items: {items}")
         if items is None:
             raise ValueError("Key not found")
         items = items.split()
-        print(f"splited: {items}")
+        get_item = lambda items, i: items[i] if i < len(items) else None
+        print(items)
+        optional = get_item(items, 3)
+        optional = optional.lstrip("[")
+        print(optional)
+        print(optional)
+        print(MapParser.get_optionals(optional))
         new_hub = Hub.model_validate(
             {
-                "name": items[0],
-                "x_axis": items[1],
-                "y_axis": items[2],
+                "name": get_item(items, 0),
+                "x_axis": get_item(items, 1),
+                "y_axis": get_item(items, 2),
             }
         )
+
         print()
         print(f"created: {new_hub} de tipo {type(new_hub)}")
+        exit(1)
         return new_hub
 
     @staticmethod
@@ -72,8 +83,8 @@ class MapParser():
             #print(MapParser.get_param("nb_drones", params))
             #print(MapParser.get_param("hub", params))
             hubs = MapParser.get_param("hub", params)
-            print(f"hubs: {hubs}")
-            print(f"getting hub: {MapParser.create_hub_(hubs[0])}")
+            for hub in hubs:
+                print(MapParser.create_hub_(hub))
             #print(params)
             exit(1)
             l_final = []

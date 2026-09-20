@@ -26,6 +26,8 @@ class Hub(BaseModel):
     x_axis: int = Field(...)
     y_axis: int = Field(...)
     color: str = "black"
+    max_drones: int | None = Field(None, gt=0)
+    zone_type: str | None = "normal"
 
 
 class Connection(BaseModel):
