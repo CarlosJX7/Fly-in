@@ -25,7 +25,7 @@ class Hub(BaseModel):
     name: str = Field(...)
     x_axis: int = Field(...)
     y_axis: int = Field(...)
-    color: str = Field(...)
+    color: str = "black"
 
 
 class Connection(BaseModel):

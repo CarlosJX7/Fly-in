@@ -28,6 +28,34 @@ from collections import defaultdict
 
 class MapParser():
     @staticmethod
+    def get_param(name: str, params: list[dict[str, str]]) -> list[str]:
+        elements = []
+        for param in params:
+            if param.get(name):
+                elements.append(param)
+        return elements
+
+    @staticmethod
+    def create_hub_(hub: dict[str, str]) -> Hub:
+        print(f"input: {hub}")
+        items = hub["hub"]
+        print(f"items: {items}")
+        if items is None:
+            raise ValueError("Key not found")
+        items = items.split()
+        print(f"splited: {items}")
+        new_hub = Hub.model_validate(
+            {
+                "name": items[0],
+                "x_axis": items[1],
+                "y_axis": items[2],
+            }
+        )
+        print()
+        print(f"created: {new_hub} de tipo {type(new_hub)}")
+        return new_hub
+
+    @staticmethod
     def input_parser(path: str):# -> list[list[str]]:
         with open(path, "r", encoding="utf-8") as f:
             params: list[dict[str, str]] = []
@@ -41,7 +69,12 @@ class MapParser():
                 value = value.strip()
                 param[key] = value
                 params.append(param)
-            print(params)
+            #print(MapParser.get_param("nb_drones", params))
+            #print(MapParser.get_param("hub", params))
+            hubs = MapParser.get_param("hub", params)
+            print(f"hubs: {hubs}")
+            print(f"getting hub: {MapParser.create_hub_(hubs[0])}")
+            #print(params)
             exit(1)
             l_final = []
             for line in f:
