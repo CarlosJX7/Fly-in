@@ -39,6 +39,11 @@ class MapParser():
     def get_optionals(items: str) -> dict[str, str]:
         # Una posibilidad es usar regex para los opcionales
         print(f"input: >>>{items}<<<")
+        key, sep, value = items.partition("=")
+        print(f"key=>{key}< sep=>{sep}< value=>{value}<")
+        if not value.isalpha() or not key.isalpha:
+            raise ValueError(f"Error: optionals contains invalid chars")
+        return {key: value}
 
     @staticmethod
     def create_hub_(hub: dict[str, str]) -> Hub:
@@ -47,11 +52,16 @@ class MapParser():
             raise ValueError("Key not found")
         items = items.split()
         get_item = lambda items, i: items[i] if i < len(items) else None
-        print(items)
-        optional = get_item(items, 3)
-        optional = optional.lstrip("[")
-        print(optional)
-        print(optional)
+        print(f"items: {items}")
+        optional = items[3:]
+        if optional:
+            for opt in optional:
+                opt = opt.lstrip("[")
+                opt = opt.rstrip("]")
+        else:
+            raise ValueError("optional = None")
+
+        print(f"pre-input: {optional}")
         print(MapParser.get_optionals(optional))
         new_hub = Hub.model_validate(
             {
@@ -62,7 +72,7 @@ class MapParser():
         )
 
         print()
-        print(f"created: {new_hub} de tipo {type(new_hub)}")
+        print(f"\n=== Succes creating===\nhub: {new_hub}\ntype: {type(new_hub)}")
         exit(1)
         return new_hub
 
