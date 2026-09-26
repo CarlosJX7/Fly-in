@@ -21,6 +21,13 @@ class Color(Enum):
     YELLOW = "YELLOW"
     GREEN = "GREEN"
 
+class ValidKeys(str, Enum):
+    COLOR="color"
+    MAX_DRONES="max_drones"
+    ZONE = "zone"
+    MAX_LINK_CAPACITY = "max_link_capacity"
+
+
 #from src.models import MapGraph
 from src.models import MapGraph, Hub, Connection
 #from .models import MapGraph
@@ -36,14 +43,23 @@ class MapParser():
         return elements
 
     @staticmethod
-    def get_optionals(items: str) -> dict[str, str]:
-        # Una posibilidad es usar regex para los opcionales
+    def get_optionals(items: list[str]) -> dict[str, str]:
         print(f"input: >>>{items}<<<")
-        key, sep, value = items.partition("=")
-        print(f"key=>{key}< sep=>{sep}< value=>{value}<")
-        if not value.isalpha() or not key.isalpha:
-            raise ValueError(f"Error: optionals contains invalid chars")
-        return {key: value}
+        elements: dict[str, str] = {}
+        for item in items:
+            key, sep, value = item.partition("=")
+            if not sep:
+                raise ValueError("Separator not found")
+            print(f"key=>{key}< sep=>{sep}< value=>{value}<")
+            try:
+                valid_key = ValidKeys(key)
+            except ValueError:
+                raise ValueError("Invalid key found")
+            if not value.isalpha() or not key.isalpha:
+                raise ValueError(f"Error: optionals contains invalid chars = {value}")
+            elements[valid_key.value] = value
+        print(f"Returned: {elements}")
+        return elements
 
     @staticmethod
     def create_hub_(hub: dict[str, str]) -> Hub:
@@ -54,12 +70,8 @@ class MapParser():
         get_item = lambda items, i: items[i] if i < len(items) else None
         print(f"items: {items}")
         optional = items[3:]
-        if optional:
-            for opt in optional:
-                opt = opt.lstrip("[")
-                opt = opt.rstrip("]")
-        else:
-            raise ValueError("optional = None")
+        optional[0] = optional[0].lstrip("[")
+        optional[-1] = optional[-1].rstrip("]")
 
         print(f"pre-input: {optional}")
         print(MapParser.get_optionals(optional))

@@ -25,7 +25,7 @@ class Hub(BaseModel):
     name: str = Field(...)
     x_axis: int = Field(...)
     y_axis: int = Field(...)
-    color: str = "black"
+    color: str = "default_color" # change after
     max_drones: int | None = Field(None, gt=0)
     zone_type: str | None = "normal"
 
