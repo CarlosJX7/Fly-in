@@ -61,32 +61,6 @@ class MapParser():
         print(f"Returned: {elements}")
         return elements
 
-    @staticmethod
-    def create_hub_(hub: dict[str, str]) -> Hub:
-        items = hub["hub"]
-        if items is None:
-            raise ValueError("Key not found")
-        items = items.split()
-        get_item = lambda items, i: items[i] if i < len(items) else None
-        print(f"items: {items}")
-        optional = items[3:]
-        optional[0] = optional[0].lstrip("[")
-        optional[-1] = optional[-1].rstrip("]")
-
-        print(f"pre-input: {optional}")
-        print(MapParser.get_optionals(optional))
-        new_hub = Hub.model_validate(
-            {
-                "name": get_item(items, 0),
-                "x_axis": get_item(items, 1),
-                "y_axis": get_item(items, 2),
-            }
-        )
-
-        print()
-        print(f"\n=== Succes creating===\nhub: {new_hub}\ntype: {type(new_hub)}")
-        exit(1)
-        return new_hub
 
     @staticmethod
     def input_parser(path: str):# -> list[list[str]]:
@@ -105,24 +79,10 @@ class MapParser():
             #print(MapParser.get_param("nb_drones", params))
             #print(MapParser.get_param("hub", params))
             hubs = MapParser.get_param("hub", params)
-            for hub in hubs:
-                print(MapParser.create_hub_(hub))
+            #for hub in hubs:
+            #    print(MapParser.create_hub_(hub))
             #print(params)
             exit(1)
-            l_final = []
-            for line in f:
-                line_list = []
-                if line.startswith("#"):
-                    continue
-                lineas = line.split()
-                for l in lineas:
-                    if l.endswith(":"):
-                        l = l.replace(":", "")
-                    if l:
-                        line_list.append(l)
-                if line_list:
-                    l_final.append(line_list)
-            return l_final
 
     @staticmethod
     def get_drones(drone_dict: dict[str, list[list[str]]]) -> int | None:
