@@ -6,7 +6,7 @@ def main():
     path = "maps/easy/01_linear_path.txt"
     parser = MapParser()
     print("===========================")
-    print("=== Getting Graph")
+    print("=== Getting Graph ===")
     graph = parser.get_graph(path)
     for e in graph:
         print(f"{e}\n")
