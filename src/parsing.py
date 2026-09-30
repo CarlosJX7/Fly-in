@@ -63,7 +63,7 @@ class MapParser():
 
 
     @staticmethod
-    def input_parser(path: str):# -> list[list[str]]:
+    def input_parser(path: str) -> list[dict[str, str]]:
         with open(path, "r", encoding="utf-8") as f:
             params: list[dict[str, str]] = []
             for line in f:
@@ -81,16 +81,16 @@ class MapParser():
             hubs = MapParser.get_param("hub", params)
             #for hub in hubs:
             #    print(MapParser.create_hub_(hub))
-            #print(params)
-            exit(1)
+            return params
 
     @staticmethod
-    def get_drones(drone_dict: dict[str, list[list[str]]]) -> int | None:
-        number = drone_dict.get("nb_drones")
-        if number:
-            return int(number[0][0])
-        else:
-            raise ValueError
+    def get_drones(data: list[dict[str, str]]) -> int | None:
+        for element in data:
+            nb_drones = element.get("nb_drones")
+            if nb_drones:
+                return nb_drones
+        return None
+
 
     @staticmethod
     def list_to_dict(raw_data: list[list[str]]) -> dict[str, list[list[str]]]:
@@ -185,10 +185,25 @@ class MapParser():
             data.append(MapParser.create_connection(conn, hubs))
         return data
 
+
+    @staticmethod
+    def create_hubs(data: list[dict[str, str]]):
+        hubs: list[Hub]
+        for d in data:
+            hub = d.get("hub")
+            if hub:
+                
+            else:
+                continue
+
+
     def get_graph(self, path: str) -> MapGraph:
         raw_input = self.input_parser(path)
-        parsed_input = self.list_to_dict(raw_input)
-        nb_drones = self.get_drones(parsed_input)
+        print(f"Obtenemos: {raw_input}")
+        print("=== Obteniendo nb_drones ===")
+        nb_drones = self.get_drones(raw_input)
+        print(nb_drones)
+        exit(1)
         start = parsed_input.get("start_hub")
         if not start: # hacer que el start sea un dict tambien
             raise ValueError("error")
