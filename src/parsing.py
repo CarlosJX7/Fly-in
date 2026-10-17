@@ -61,7 +61,6 @@ class MapParser():
         print(f"Returned: {elements}")
         return elements
 
-
     @staticmethod
     def input_parser(path: str) -> list[dict[str, str]]:
         with open(path, "r", encoding="utf-8") as f:
@@ -90,7 +89,6 @@ class MapParser():
             if nb_drones:
                 return nb_drones
         return None
-
 
     @staticmethod
     def list_to_dict(raw_data: list[list[str]]) -> dict[str, list[list[str]]]:
@@ -178,6 +176,7 @@ class MapParser():
         destiny_hub = hubs[destiny_name]
 
         return Connection.model_validate({"origin_hub": origin_hub, "destiny_hub": destiny_hub})
+
     @staticmethod
     def connection_dict(connections: list[dict[str, str]], hubs: dict[str, Hub]) -> list[Connection]:
         data = []
@@ -185,17 +184,29 @@ class MapParser():
             data.append(MapParser.create_connection(conn, hubs))
         return data
 
-
     @staticmethod
     def create_hubs(data: list[dict[str, str]]):
+        print("\n=== Creating hub ===")
+        print(f"input = >>{data}<<")
         hubs: list[Hub]
+        new_hub = {}
         for d in data:
             hub = d.get("hub")
             if hub:
-                
-            else:
-                continue
+                print(f"Extracted >>{d}<<")
+        print("=== Creating hubs end ===")
+        #probar a crear una lista parseada con todos los hubs
+        exit(1)
 
+    # En esta funcion podriamos sacar cada elemento
+    # parsearlo y crearlo a la vez, todo en el mismo sitio
+    # y en la misma iteracion
+    @staticmethod
+    def parse_hubs(data: list[dict[str, str]]):
+        #print(f"data input = {data}")
+        for d in data:
+            print(f"element in data list >>{d}<<")
+        pass
 
     def get_graph(self, path: str) -> MapGraph:
         raw_input = self.input_parser(path)
@@ -203,6 +214,8 @@ class MapParser():
         print("=== Obteniendo nb_drones ===")
         nb_drones = self.get_drones(raw_input)
         print(nb_drones)
+        print("=== Parsing hubs -> list ===")
+        self.parse_hubs(raw_input)
         exit(1)
         start = parsed_input.get("start_hub")
         if not start: # hacer que el start sea un dict tambien
