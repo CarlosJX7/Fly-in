@@ -25,7 +25,7 @@ class ValidKeys(str, Enum):
 class MapParser():
 
     @staticmethod
-    def get_optionals(items: list[str]) -> dict[str, str]:
+    def get_optionals(items: list[str]) -> dict[str, str | int]:
         print(f"input: >>>{items}<<<")
         elements: dict[str, str] = {}
         for item in items:
@@ -77,15 +77,50 @@ class MapParser():
             print(f"element in data list >>{d}<<")
         pass
 
+    @staticmethod
+    def parse_connection(raw_value: str, hubs: dict[str, Hub]) -> Connection:
+        pass
+
     def get_graph(self, path: str) -> MapGraph:
-        raw_input = self.input_parser(path)
+
+        nb_drones = None
+        start_hub = None
+        goal_hub = None
+        end_hub = None
+        hubs_dict: dict[str, Hub] = {}
+        connections: list[Connection] = []
+
+        raw_input: list[dict[str, str]] = self.input_parser(path)
         print(f"Obtenemos: {raw_input}")
-        print("=== Obteniendo nb_drones ===")
-        nb_drones = self.get_drones(raw_input)
-        print(nb_drones)
+        for element in raw_input:
+            for key, value in element.items():
+                match key:
+                    case "nb_drones":
+                        print("\n-Getting nb_drones")
+                        print(f"key = {key}")
+                        print(f"value = {value}")
+                        nb_drones = int(value)
+                        print(f">>>{value} type:{type(nb_drones)}")
+                    case "start_hub":
+                        print("\n-Getting start_hub")
+                        print(f"key = {key}")
+                        hub = value.split(" ")
+                        print(f"value = {hub}")
+                        new_hub = Hub.model_validate({
+                            "name": hub[0],
+                            "x_axis": hub[1],
+                            "y_axis": hub[2]
+                        })
+                        print(f">>>{new_hub} type={type(new_hub)}")
+                    case "hub":
+                        print("\n-Getting hub...")
+                        print(f"key = {key}")
+                        print(f"value = {value}")
+                    case "connection":
+                        pass
+        exit(1)
         print("=== Parsing hubs -> list ===")
         self.parse_hubs(raw_input)
-        exit(1)
         graph = MapGraph.model_validate({
                 "nb_drones": nb_drones,
                 "starting_hub": list_hubs["start"],
@@ -94,3 +129,4 @@ class MapParser():
                 "connection": connections
             })
         return graph
+
