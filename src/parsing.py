@@ -23,28 +23,35 @@ class ValidKeys(str, Enum):
     MAX_LINK_CAPACITY = "max_link_capacity"
 
 class MapParser():
+    """
+    Parser principal de archivos de mapas (.txt) para construir un objeto MapGraph.
+    """
 
     @staticmethod
     def get_optionals(items: list[str]) -> dict[str, str | int]:
-        print(f"input: >>>{items}<<<")
-        elements: dict[str, str] = {}
+        """
+        Extrae y valida los atributos opcionales contenidos entre corchetes `[clave=valor ...]`.
+        """
+        elements: dict[str, str | int] = {}
         for item in items:
             key, sep, value = item.partition("=")
             if not sep:
                 raise ValueError("Separator not found")
-            print(f"key=>{key}< sep=>{sep}< value=>{value}<")
             try:
                 valid_key = ValidKeys(key)
             except ValueError:
                 raise ValueError("Invalid key found")
-            if not value.isalpha() or not key.isalpha:
+            if not value.isalnum():
                 raise ValueError(f"Error: optionals contains invalid chars = {value}")
             elements[valid_key.value] = value
-        print(f"Returned: {elements}")
         return elements
 
     @staticmethod
     def input_parser(path: str) -> list[dict[str, str]]:
+        """
+        Lee el archivo `.txt`, ignora comentarios (`#`) y líneas vacías,
+        y devuelve una lista de diccionarios `{directiva: valor}`.
+        """
         with open(path, "r", encoding="utf-8") as f:
             params: list[dict[str, str]] = []
             for line in f:
@@ -60,29 +67,53 @@ class MapParser():
             return params
 
     @staticmethod
-    def get_drones(data: list[dict[str, str]]) -> int | None:
-        for element in data:
-            nb_drones = element.get("nb_drones")
-            if nb_drones:
-                return int(nb_drones)
-        return None
+    def parse_hub(value: str) -> Hub:
+        """
+        Transforma la definición de un hub en una instancia validada de `Hub`.
+        """
+        mandatory, sep, opt = value.partition("[")
+        print("\n=== Getting hub ===")
+        mandatory = mandatory.strip()
+        mand = mandatory.split(" ")
+        hub_params: dict[str, str | int] = {
+            "name": mand[0],
+            "x_axis": mand[1],
+            "y_axis": mand[2]
+        }
+        if sep:
+            opt = opt.rstrip("]")
+            opt = opt.split(" ")
+            ops = MapParser.get_optionals(opt)
+            hub_params.update(ops)
+        new_hub = Hub.model_validate(hub_params)
+        print(f"Created: {new_hub}")
+        return new_hub
 
-    # En esta funcion podriamos sacar cada elemento
-    # parsearlo y crearlo a la vez, todo en el mismo sitio
-    # y en la misma iteracion
     @staticmethod
-    def parse_hubs(data: list[dict[str, str]]):
-        #print(f"data input = {data}")
-        for d in data:
-            print(f"element in data list >>{d}<<")
-        pass
-
-    @staticmethod
-    def parse_connection(raw_value: str, hubs: dict[str, Hub]) -> Connection:
-        pass
+    def parse_connection(raw_value: str, hubs_dict: dict[str, Hub]) -> Connection:
+        """
+        Transforma un string de conexión en una instancia validada de `Connection`.
+        """
+        print("\n=== Parsing connection ===")
+        origin, sep, dest = raw_value.partition("-")
+        if sep == None:
+            raise ValueError("Conn Error: sep")
+        origin_hub = hubs_dict.get(origin)
+        destiny_hub = hubs_dict.get(dest)
+        if origin_hub == None or destiny_hub == None:
+            raise ValueError("Conn Error: origin | destiny")
+        conn = {
+            "origin_hub": origin_hub,
+            "destiny_hub": destiny_hub
+        }
+        new_conn = Connection.model_validate(conn)
+        print(f"Created: {new_conn}")
+        return new_conn
 
     def get_graph(self, path: str) -> MapGraph:
-
+        """
+        Orquesta la lectura del archivo y construye el `MapGraph` en una única iteración (Single-Pass).
+        """
         nb_drones = None
         start_hub = None
         goal_hub = None
@@ -96,28 +127,27 @@ class MapParser():
             for key, value in element.items():
                 match key:
                     case "nb_drones":
-                        print("\n-Getting nb_drones")
+                        print("\n=== Getting nb_drones ===")
                         print(f"key = {key}")
                         print(f"value = {value}")
                         nb_drones = int(value)
-                        print(f">>>{value} type:{type(nb_drones)}")
+                        if isinstance(nb_drones, int):
+                            print("Success!")
+                        else:
+                            print("Error creating obj")
                     case "start_hub":
-                        print("\n-Getting start_hub")
-                        print(f"key = {key}")
-                        hub = value.split(" ")
-                        print(f"value = {hub}")
-                        new_hub = Hub.model_validate({
-                            "name": hub[0],
-                            "x_axis": hub[1],
-                            "y_axis": hub[2]
-                        })
-                        print(f">>>{new_hub} type={type(new_hub)}")
-                    case "hub":
-                        print("\n-Getting hub...")
-                        print(f"key = {key}")
-                        print(f"value = {value}")
-                    case "connection":
+                        start_hub = self.parse_hub(value)
+                        hubs_dict[start_hub.name] = start_hub
                         pass
+                    case "hub":
+                        hub = self.parse_hub(value)
+                        hubs_dict[hub.name] = hub
+                    case "end_hub":
+                        end_hub = self.parse_hub(value)
+                        hubs_dict[end_hub.name] = end_hub
+                    case "connection":
+                        self.parse_connection(value, hubs_dict)
+                        exit(1)
         exit(1)
         print("=== Parsing hubs -> list ===")
         self.parse_hubs(raw_input)
