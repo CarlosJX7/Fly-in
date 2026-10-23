@@ -26,23 +26,22 @@ class MapParser():
     """
     Parser principal de archivos de mapas (.txt) para construir un objeto MapGraph.
     """
-
     @staticmethod
-    def get_optionals(items: list[str]) -> dict[str, str | int]:
-        """
-        Extrae y valida los atributos opcionales contenidos entre corchetes `[clave=valor ...]`.
-        """
-        elements: dict[str, str | int] = {}
+    def get_optionals(items: list[str]) -> dict[str, str]:
+        """Extrae las parejas clave=valor"""
+        elements: dict[str, str] = {}
         for item in items:
             key, sep, value = item.partition("=")
-            if not sep:
-                raise ValueError("Separator not found")
+            if not sep or not key or not value:
+                raise ValueError(f"Separator '=' not found in '{item}'")
             try:
                 valid_key = ValidKeys(key)
             except ValueError:
-                raise ValueError("Invalid key found")
-            if not value.isalnum():
-                raise ValueError(f"Error: optionals contains invalid chars = {value}")
+                raise ValueError(f"Invalid key found: '{key}'")
+
+            if valid_key.value in elements:
+                raise ValueError(f"Duplicate optional key: '{key}'")
+
             elements[valid_key.value] = value
         return elements
 
@@ -74,16 +73,32 @@ class MapParser():
         mandatory, sep, opt = value.partition("[")
         print("\n=== Getting hub ===")
         mandatory = mandatory.strip()
-        mand = mandatory.split(" ")
+        mand = mandatory.split()
+        if len(mand) != 3:
+            raise ValueError(
+                f"Invalid hub definition '{mandatory}'"
+                f"Expected '<name> <x> <y>'"
+                )
+        if "-" in mand[0]:
+            raise ValueError(f"Invalid hub name '{mand[0]}': forbidden char")
+        try:
+            x_axis = int(mand[1])
+            y_axis = int(mand[2])
+        except ValueError:
+            raise ValueError(f"Coordinates for hub '{mand[0]}' must be valid integers")
         hub_params: dict[str, str | int] = {
             "name": mand[0],
-            "x_axis": mand[1],
-            "y_axis": mand[2]
+            "x_axis": x_axis,
+            "y_axis": y_axis
         }
         if sep:
-            opt = opt.rstrip("]")
-            opt = opt.split(" ")
-            ops = MapParser.get_optionals(opt)
+            opt = opt.strip()
+            if not opt.endswith("]"):
+                raise ValueError(f"Missing closing bracket ']' in hub '{mand[0]}'")
+            opt_list = opt.rstrip("]").split()
+            if not opt_list:
+                raise ValueError(f"Empty brackets '[]' in hub '{mand[0]}'")
+            ops = MapParser.get_optionals(opt_list)
             hub_params.update(ops)
         new_hub = Hub.model_validate(hub_params)
         print(f"Created: {new_hub}")
@@ -95,18 +110,37 @@ class MapParser():
         Transforma un string de conexión en una instancia validada de `Connection`.
         """
         print("\n=== Parsing connection ===")
-        origin, sep, dest = raw_value.partition("-")
-        if sep == None:
-            raise ValueError("Conn Error: sep")
+        max_link_capacity = None
+        mandatory, sep_mand, opt = raw_value.partition("[")
+        origin, sep_conn, dest = mandatory.strip().partition("-")
+        origin = origin.strip()
+        dest = dest.strip()
+        if not sep_conn or not origin or not dest or "-" in dest or " " in origin or " " in dest:
+            raise ValueError(f"Invalid connection format '{mandatory.strip()}': expected '<zone1>-<zone2>'")
         origin_hub = hubs_dict.get(origin)
         destiny_hub = hubs_dict.get(dest)
         if origin_hub == None or destiny_hub == None:
-            raise ValueError("Conn Error: origin | destiny")
-        conn = {
-            "origin_hub": origin_hub,
-            "destiny_hub": destiny_hub
-        }
-        new_conn = Connection.model_validate(conn)
+            raise ValueError(f"Connection '{origin}-{dest}' references an undefined hub")
+        if origin == dest:
+            raise ValueError(f"Self-connection '{origin}-{dest}' is not allowed")
+        if sep_mand:
+            opt = opt.strip()
+            if not opt.endswith("]"):
+                raise ValueError(f"Missing closing bracket ']' in connection '{origin}-{dest}'")
+            opt_list = opt.rstrip("]").split()
+            ops = MapParser.get_optionals(opt_list)
+            if set(ops.keys()) != "max_link_capacity":
+                raise ValueError(f"Connection '{origin}-{dest}' only accepts 'max_link_capacity'")
+            max_link_capacity = int(ops["max_link_capacity"])
+        opt = opt.rstrip("]")
+        key, _, value = opt.partition("=")
+        if value:
+            max_link_capacity = int(value)
+        new_conn = Connection(
+            origin_hub=origin_hub,
+            destiny_hub=destiny_hub,
+            max_link_capacity=max_link_capacity
+        )
         print(f"Created: {new_conn}")
         return new_conn
 
@@ -116,7 +150,6 @@ class MapParser():
         """
         nb_drones = None
         start_hub = None
-        goal_hub = None
         end_hub = None
         hubs_dict: dict[str, Hub] = {}
         connections: list[Connection] = []
@@ -146,16 +179,14 @@ class MapParser():
                         end_hub = self.parse_hub(value)
                         hubs_dict[end_hub.name] = end_hub
                     case "connection":
-                        self.parse_connection(value, hubs_dict)
-                        exit(1)
-        exit(1)
-        print("=== Parsing hubs -> list ===")
-        self.parse_hubs(raw_input)
+                        conn = self.parse_connection(value, hubs_dict)
+                        connections.append(conn)
+        print("\n=== Creating graph ===")
         graph = MapGraph.model_validate({
                 "nb_drones": nb_drones,
-                "starting_hub": list_hubs["start"],
-                "hubs": list_hubs,
-                "goal_hub": list_hubs["goal"],
+                "starting_hub": start_hub,
+                "hubs": hubs_dict,
+                "end_hub": end_hub,
                 "connection": connections
             })
         return graph

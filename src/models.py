@@ -8,10 +8,10 @@ class State(Enum):
     FINISHED = "FINISHED"
 
 class HubType(Enum):
-    NORMAL = "NORMAL"
-    RESTRICTED = "RESTRICTED"
-    PRIORITY = "PRIORITY"
-    BLOCKED = "BLOCKED"
+    NORMAL = "normal"
+    RESTRICTED = "restricted"
+    PRIORITY = "priority"
+    BLOCKED = "blocked"
 
 
 class Color(Enum):
@@ -27,20 +27,20 @@ class Hub(BaseModel):
     y_axis: int = Field(...)
     color: str = "default_color" # change after
     max_drones: int | None = Field(None, gt=0)
-    zone_type: str | None = "normal"
+    zone: HubType = HubType.NORMAL
 
 
 class Connection(BaseModel):
     origin_hub: Hub | None = Field(...)
     destiny_hub: Hub | None = Field(...)
-    max_link_capacity: int | None = 42
+    max_link_capacity: int | None = 1
 
 
 class MapGraph(BaseModel):
     nb_drones: int = Field(..., gt=0)
     starting_hub: Hub = Field(...)
     hubs: dict[str, Hub] = Field(...)
-    goal_hub: Hub = Field(...)
+    end_hub: Hub = Field(...)
     connection: list[Connection] = Field(...)
 
 
