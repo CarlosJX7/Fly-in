@@ -99,6 +99,8 @@ class MapParser():
             if not opt_list:
                 raise ValueError(f"Empty brackets '[]' in hub '{mand[0]}'")
             ops = MapParser.get_optionals(opt_list)
+            if "max_link_capacity" in ops:
+                raise ValueError(f"'max_link_capacity' is not valid for hub '{mand[0]}'")
             hub_params.update(ops)
         new_hub = Hub.model_validate(hub_params)
         print(f"Created: {new_hub}")
@@ -129,13 +131,9 @@ class MapParser():
                 raise ValueError(f"Missing closing bracket ']' in connection '{origin}-{dest}'")
             opt_list = opt.rstrip("]").split()
             ops = MapParser.get_optionals(opt_list)
-            if set(ops.keys()) != "max_link_capacity":
+            if "max_link_capacity" not in ops:
                 raise ValueError(f"Connection '{origin}-{dest}' only accepts 'max_link_capacity'")
             max_link_capacity = int(ops["max_link_capacity"])
-        opt = opt.rstrip("]")
-        key, _, value = opt.partition("=")
-        if value:
-            max_link_capacity = int(value)
         new_conn = Connection(
             origin_hub=origin_hub,
             destiny_hub=destiny_hub,
@@ -161,21 +159,24 @@ class MapParser():
                 match key:
                     case "nb_drones":
                         print("\n=== Getting nb_drones ===")
-                        print(f"key = {key}")
-                        print(f"value = {value}")
+                        if nb_drones is not None:
+                            raise ValueError("Duplicate 'nb_drones'")
                         nb_drones = int(value)
-                        if isinstance(nb_drones, int):
-                            print("Success!")
-                        else:
-                            print("Error creating obj")
+
                     case "start_hub":
+                        if start_hub is not None:
+                            raise ValueError(f"Duplicate 'start_hub'")
                         start_hub = self.parse_hub(value)
                         hubs_dict[start_hub.name] = start_hub
                         pass
                     case "hub":
                         hub = self.parse_hub(value)
+                        if hub.name in hubs_dict:
+                            raise ValueError(f"Duplicate hub name '{hub.name}'")
                         hubs_dict[hub.name] = hub
                     case "end_hub":
+                        if end_hub is not None:
+                            raise ValueError("Duplicate 'end_hub'")
                         end_hub = self.parse_hub(value)
                         hubs_dict[end_hub.name] = end_hub
                     case "connection":

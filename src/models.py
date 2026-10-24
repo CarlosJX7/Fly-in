@@ -26,14 +26,14 @@ class Hub(BaseModel):
     x_axis: int = Field(...)
     y_axis: int = Field(...)
     color: str = "default_color" # change after
-    max_drones: int | None = Field(None, gt=0)
+    max_drones: int | None = Field(1, gt=0)
     zone: HubType = HubType.NORMAL
 
 
 class Connection(BaseModel):
     origin_hub: Hub | None = Field(...)
     destiny_hub: Hub | None = Field(...)
-    max_link_capacity: int | None = 1
+    max_link_capacity: int | None = Field(1, gt=0)
 
 
 class MapGraph(BaseModel):
