@@ -7,25 +7,17 @@ class State(Enum):
     IN_TRANSIT = "IN_TRANSIT"
     FINISHED = "FINISHED"
 
-class HubType(Enum):
+class HubType(str, Enum):
     NORMAL = "normal"
     RESTRICTED = "restricted"
     PRIORITY = "priority"
     BLOCKED = "blocked"
 
-
-class Color(Enum):
-    BLUE = "BLUE"
-    RED = "RED"
-    YELLOW = "YELLOW"
-    GREEN = "GREEN"
-
-
 class Hub(BaseModel):
     name: str = Field(...)
     x_axis: int = Field(...)
     y_axis: int = Field(...)
-    color: str = "default_color" # change after
+    color: str | None = None
     max_drones: int | None = Field(1, gt=0)
     zone: HubType = HubType.NORMAL
 
