@@ -1,15 +1,17 @@
 from src.models import Hub, MapGraph
 from src.parsing import MapParser
-
+from pydantic import ValidationError
 
 def main():
     path = "maps/easy/01_linear_path.txt"
-    parser = MapParser()
     print("===========================")
     print("=== Getting Graph ===")
-    graph = parser.get_graph(path)
-    for e in graph:
-        print(f"{e}\n")
+    try:
+        graph = MapParser().get_graph(path)
+    except (ValueError, ValidationError) as err:
+        print(f"Error: {err}")
+    for element in graph:
+        print(f"{element}\n")
     print("===========================")
 
 if __name__ == "__main__":
