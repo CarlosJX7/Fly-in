@@ -27,9 +27,9 @@ class MapParser():
     Parser principal de archivos de mapas (.txt) para construir un objeto MapGraph.
     """
     @staticmethod
-    def get_optionals(items: list[str]) -> dict[str, str]:
+    def get_optionals(items: list[str]) -> dict[str, str | int]:
         """Extrae las parejas clave=valor"""
-        elements: dict[str, str] = {}
+        elements: dict[str, str | int] = {}
         for item in items:
             key, sep, value = item.partition("=")
             if not sep or not key or not value:
@@ -42,6 +42,13 @@ class MapParser():
             if valid_key.value in elements:
                 raise ValueError(f"Duplicate optional key: '{key}'")
 
+            if valid_key in (ValidKeys.MAX_DRONES, ValidKeys.MAX_LINK_CAPACITY):
+                if not value.isdigit() or int(value) <= 0:
+                    raise ValueError(f"'{key}' must be a positive integer, fot '{value}'")
+                elements[valid_key.value] = int(value)
+            else:
+            if not value.isalpha():
+                raise ValueError(f"'{key}' must contain only letters, got '{value}'")
             elements[valid_key.value] = value
         return elements
 
@@ -66,7 +73,7 @@ class MapParser():
             return params
 
     @staticmethod
-    def parse_hub(value: str) -> Hub:
+    def parse_hub(value: str, is_endpoint: bool) -> Hub:
         """
         Transforma la definición de un hub en una instancia validada de `Hub`.
         """
@@ -112,7 +119,7 @@ class MapParser():
         Transforma un string de conexión en una instancia validada de `Connection`.
         """
         print("\n=== Parsing connection ===")
-        max_link_capacity = None
+        max_link_capacity = 1 # Necesario porque pydantic admitia None
         mandatory, sep_mand, opt = raw_value.partition("[")
         origin, sep_conn, dest = mandatory.strip().partition("-")
         origin = origin.strip()
@@ -131,7 +138,7 @@ class MapParser():
                 raise ValueError(f"Missing closing bracket ']' in connection '{origin}-{dest}'")
             opt_list = opt.rstrip("]").split()
             ops = MapParser.get_optionals(opt_list)
-            if "max_link_capacity" not in ops:
+            if set(ops.keys()) != {"max_link_capacity"}:
                 raise ValueError(f"Connection '{origin}-{dest}' only accepts 'max_link_capacity'")
             max_link_capacity = int(ops["max_link_capacity"])
         new_conn = Connection(
@@ -166,18 +173,18 @@ class MapParser():
                     case "start_hub":
                         if start_hub is not None:
                             raise ValueError(f"Duplicate 'start_hub'")
-                        start_hub = self.parse_hub(value)
+                        start_hub = self.parse_hub(value, is_endpoint=True)
                         hubs_dict[start_hub.name] = start_hub
                         pass
                     case "hub":
-                        hub = self.parse_hub(value)
+                        hub = self.parse_hub(value, is_endpoint=False)
                         if hub.name in hubs_dict:
                             raise ValueError(f"Duplicate hub name '{hub.name}'")
                         hubs_dict[hub.name] = hub
                     case "end_hub":
                         if end_hub is not None:
                             raise ValueError("Duplicate 'end_hub'")
-                        end_hub = self.parse_hub(value)
+                        end_hub = self.parse_hub(value, is_endpoint=True)
                         hubs_dict[end_hub.name] = end_hub
                     case "connection":
                         conn = self.parse_connection(value, hubs_dict)

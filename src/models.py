@@ -31,9 +31,9 @@ class Hub(BaseModel):
 
 
 class Connection(BaseModel):
-    origin_hub: Hub | None = Field(...)
-    destiny_hub: Hub | None = Field(...)
-    max_link_capacity: int | None = Field(1, gt=0)
+    origin_hub: Hub = Field(...)
+    destiny_hub: Hub = Field(...)
+    max_link_capacity: int = Field(1, gt=0)
 
 
 class MapGraph(BaseModel):
