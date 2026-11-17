@@ -3,9 +3,9 @@ from pydantic import BaseModel, Field
 
 class State(Enum):
     WAITING = "WAITING"
-    FLYING = "FLYING"
     IN_TRANSIT = "IN_TRANSIT"
     FINISHED = "FINISHED"
+    #FLYING = "FLYING"
 
 class HubType(str, Enum):
     NORMAL = "normal"
@@ -30,10 +30,10 @@ class Connection(BaseModel):
 
 class MapGraph(BaseModel):
     nb_drones: int = Field(..., gt=0)
-    starting_hub: Hub = Field(...)
+    start_hub: Hub = Field(...)
     hubs: dict[str, Hub] = Field(...)
     end_hub: Hub = Field(...)
-    connection: list[Connection] = Field(...)
+    connections: list[Connection] = Field(...)
 
 
 class Drone:
@@ -41,3 +41,6 @@ class Drone:
         self.id = drone_id
         self.start_hub = start_hub
         self.state = State.WAITING
+        self.current_hub: str
+        self.target_hub: str | None = None
+        self.path: list[str]

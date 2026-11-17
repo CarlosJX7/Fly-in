@@ -121,6 +121,15 @@ class MapParser():
         return new_hub
 
     @staticmethod
+    def register_hub(hub: Hub, hubs_dict: dict[str, Hub]) -> None:
+        if hub.name in hubs_dict:
+            raise ValueError(f"Duplicate hub name '{hub.name}'")
+        for existing in hubs_dict.values():
+            if (existing.x_axis, existing.y_axis) == (hub.x_axis, hub.y_axis):
+                raise ValueError(f"Duplicate coordinates for {hub.name}")
+        hubs_dict[hub.name] = hub
+
+    @staticmethod
     def parse_connection(raw_value: str, hubs_dict: dict[str, Hub]) -> Connection:
         """
         Transforma un string de conexión en una instancia validada de `Connection`.
@@ -216,10 +225,10 @@ class MapParser():
             raise ValueError("Map must contain 'start_hub' and 'end_hub'")
         graph = MapGraph.model_validate({
                 "nb_drones": nb_drones,
-                "starting_hub": start_hub,
+                "start_hub": start_hub,
                 "hubs": hubs_dict,
                 "end_hub": end_hub,
-                "connection": connections
+                "connections": connections
             })
         return graph
 
