@@ -1,17 +1,19 @@
 from enum import Enum
 from pydantic import BaseModel, Field
 
+
 class State(Enum):
     WAITING = "WAITING"
     IN_TRANSIT = "IN_TRANSIT"
     FINISHED = "FINISHED"
-    #FLYING = "FLYING"
+
 
 class HubType(str, Enum):
     NORMAL = "normal"
     RESTRICTED = "restricted"
     PRIORITY = "priority"
     BLOCKED = "blocked"
+
 
 class Hub(BaseModel):
     name: str = Field(...)
@@ -24,7 +26,7 @@ class Hub(BaseModel):
 
 class Connection(BaseModel):
     origin_hub: Hub = Field(...)
-    destiny_hub: Hub = Field(...)
+    dest_hub: Hub = Field(...)
     max_link_capacity: int = Field(1, gt=0)
 
 

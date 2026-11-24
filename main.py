@@ -1,7 +1,7 @@
-from src.models import Hub, MapGraph
 from src.parsing import MapParser
 from pydantic import ValidationError
 import sys
+
 
 def main() -> None:
     if len(sys.argv) != 2:
@@ -14,6 +14,7 @@ def main() -> None:
             print(f"{element}\n")
     except (ValueError, ValidationError, IndexError) as err:
         print(f"Error: {err}")
+
 
 if __name__ == "__main__":
     main()
