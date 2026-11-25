@@ -23,6 +23,12 @@ class Hub(BaseModel):
     max_drones: int | None = Field(1, gt=0)
     zone: HubType = HubType.NORMAL
 
+    def move_cost(self) -> int:
+        if self.zone == HubType.RESTRICTED:
+            return 2
+        else:
+            return 1
+
 
 class Connection(BaseModel):
     origin_hub: Hub = Field(...)

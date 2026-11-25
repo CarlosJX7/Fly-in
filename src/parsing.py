@@ -271,7 +271,6 @@ class MapParser():
                         raise ValueError(f"Unknown token: '{key}'")
             except ValueError as err:
                 raise ValueError(f"line {pos}: {err}") from err
-        print("\n=== Creating graph ===")
         if start_hub is None or end_hub is None:
             raise ValueError("Map must contain 'start_hub' and 'end_hub'")
         graph = MapGraph.model_validate({

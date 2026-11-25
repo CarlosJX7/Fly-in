@@ -10,3 +10,11 @@ class Graph:
 
     def hub(self, name: str) -> Hub:
         pass
+
+    @property
+    def start(self) -> Hub:
+        pass
+
+    @property
+    def end(self) -> Hub:
+        pass
