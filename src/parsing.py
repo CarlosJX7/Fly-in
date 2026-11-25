@@ -154,7 +154,14 @@ class MapParser():
         origin, sep_conn, dest = mandatory.strip().partition("-")
         origin = origin.strip()
         dest = dest.strip()
-        if not sep_conn or not origin or not dest or "-" in dest or " " in origin or " " in dest:
+        if (
+            not sep_conn
+            or not origin
+            or not dest
+            or "-" in dest
+            or " " in origin
+            or " " in dest
+        ):
             raise ValueError(
                 f"Invalid connection format '{mandatory.strip()}':"
                 f" expected '<zone1>-<zone2>'"
@@ -255,9 +262,9 @@ class MapParser():
 
                     case "connection":
                         conn = self.parse_connection(value, hubs_dict)
-                        for hub in connections:
+                        for conn in connections:
                             if {
-                                hub.origin_hub.name, hub.dest_hub.name
+                                conn.origin_hub.name, conn.dest_hub.name
                                 } == {
                                     conn.origin_hub.name, conn.dest_hub.name}:
                                 raise ValueError(
